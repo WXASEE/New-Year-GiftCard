@@ -1,0 +1,7 @@
+{
+  "name": "AI New Year Gift Card Creator",
+  "description": "Create beautiful, personalized New Year's gift cards using your own photos and our powerful AI designer. A perfect way to share memories with family and friends.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
