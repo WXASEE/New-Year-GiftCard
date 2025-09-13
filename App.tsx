@@ -22,6 +22,7 @@ const App: React.FC = () => {
   const [lastGenerationData, setLastGenerationData] = useState<Record<string, string | File> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [liffError, setLiffError] = useState<string | null>(null);
+  const [isLiffInitializing, setIsLiffInitializing] = useState<boolean>(true);
   const { t, setLocale, locale } = useLocalization();
 
   useEffect(() => {
@@ -31,14 +32,21 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const initializeLiff = async () => {
-      // Use the provided LIFF ID for development
-      const liffId = '2008103174-3pAO5mvL';
+      const liffId = process.env.LIFF_ID;
 
+      if (!liffId) {
+        setLiffError("LIFF ID is not configured. Please set the LIFF_ID environment variable.");
+        setIsLiffInitializing(false);
+        return;
+      }
+      
       try {
         await window.liff.init({ liffId });
       } catch (e: any) {
         console.error('LIFF initialization failed', e);
         setLiffError(`LIFF initialization failed: ${e.message}. Please check that your LIFF ID is correct and that you are running the app inside LINE.`);
+      } finally {
+        setIsLiffInitializing(false);
       }
     };
 
@@ -46,6 +54,7 @@ const App: React.FC = () => {
       initializeLiff();
     } else {
       setLiffError("LIFF SDK not found. Make sure the script is loaded.");
+      setIsLiffInitializing(false);
     }
   }, []);
 
@@ -113,6 +122,33 @@ const App: React.FC = () => {
           );
     }
   };
+  
+  const LanguageSwitcher = () => (
+    <div className="absolute top-4 right-4 z-10 flex space-x-2">
+      {(['en', 'ko', 'ja'] as const).map((lang) => (
+        <button
+          key={lang}
+          onClick={() => setLocale(lang)}
+          className={`px-3 py-1 text-sm font-semibold rounded-full transition-colors ${
+            locale === lang
+              ? 'bg-blue-600 text-white shadow-md'
+              : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+          }`}
+        >
+          {lang.toUpperCase()}
+        </button>
+      ))}
+    </div>
+  );
+
+  if (isLiffInitializing) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4 text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+        <p className="text-gray-600 font-semibold">Connecting to LINE...</p>
+      </div>
+    );
+  }
 
   if (liffError) {
     return (
@@ -127,12 +163,11 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center p-4">
-       {/* Header and language switcher are removed for a cleaner LINE Mini App experience */}
-      <main className="w-full max-w-2xl flex justify-center flex-grow">
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center p-4 relative">
+       <LanguageSwitcher />
+      <main className="w-full max-w-2xl flex justify-center flex-grow pt-12">
         {renderContent()}
       </main>
-      {/* Footer is removed for a cleaner LINE Mini App experience */}
     </div>
   );
 };
