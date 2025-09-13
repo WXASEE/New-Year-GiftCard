@@ -23,7 +23,7 @@ const ImageResult: React.FC<ImageResultProps> = ({ images, onBack, onGenerateAga
       const a = document.createElement('a');
       a.style.display = 'none';
       a.href = imageUrl;
-      a.download = `product_photo_${index + 1}.jpeg`;
+      a.download = `new_year_card_${index + 1}.jpeg`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -33,31 +33,49 @@ const ImageResult: React.FC<ImageResultProps> = ({ images, onBack, onGenerateAga
     }
   };
 
-  const handleShare = async () => {
-    // This is a simplified share function for demonstration.
-    // To share the actual image, you first need to upload the base64 data
-    // to a server to get a public URL. This URL can then be used in the
-    // `liff.sendMessages` or `liff.shareTargetPicker` payload to send an image message.
+  const handleShare = async (imageUrl: string) => {
+    // To share the actual image via LIFF, it must be available at a public HTTPS URL.
+    // The current `imageUrl` is a base64 string, which cannot be sent directly.
+    // A backend is required to receive this base64 data, upload it to cloud storage,
+    // and return a public URL that can be used in the `shareTargetPicker`.
+    alert(t('alert_image_share_info'));
+
     if (!window.liff || !window.liff.isInClient()) {
         alert(t('alert_share_unavailable'));
         return;
     }
 
     try {
-        const message = {
-            type: 'text' as const,
-            text: t('text_share_message'),
-        };
+      // As a fallback, we will share a text message.
+      const message = {
+        type: 'text' as const,
+        text: t('text_share_message'),
+      };
 
-        if (window.liff.isApiAvailable('shareTargetPicker')) {
-            await window.liff.shareTargetPicker([message]);
-        } else {
-            // Fallback for older LINE versions
-            await window.liff.sendMessages([message]);
-        }
-    } catch (error) {
+      // --- FUTURE BACKEND INTEGRATION ---
+      // Once you have a backend endpoint to upload the image:
+      // 1. Send the base64 `imageUrl` to your backend.
+      // 2. Get a public HTTPS URL back.
+      // 3. Use the image message format below.
+      /*
+      const publicImageUrl = 'URL_FROM_YOUR_BACKEND';
+      const imageMessage = {
+          type: 'image' as const,
+          originalContentUrl: publicImageUrl,
+          previewImageUrl: publicImageUrl,
+      };
+      await window.liff.shareTargetPicker([imageMessage]);
+      */
+      
+      if (window.liff.isApiAvailable('shareTargetPicker')) {
+        await window.liff.shareTargetPicker([message]);
+      } else {
+        // Fallback for older LINE versions
+        await window.liff.sendMessages([message]);
+      }
+    } catch (error: any) {
         console.error('LIFF share failed:', error);
-        alert(`Error sharing: ${error}`);
+        alert(`${t('alert_share_error')} ${error.message}`);
     }
   };
 
@@ -77,7 +95,7 @@ const ImageResult: React.FC<ImageResultProps> = ({ images, onBack, onGenerateAga
                     <span>{t('button_download')}</span>
                 </button>
                 <button
-                    onClick={handleShare}
+                    onClick={() => handleShare(image)}
                     className="w-full bg-green-500 hover:bg-green-600 text-white text-center py-2.5 px-2 text-sm font-semibold transition-colors duration-200 flex items-center justify-center gap-1.5"
                     style={{backgroundColor: '#06C755'}}
                 >
@@ -93,13 +111,13 @@ const ImageResult: React.FC<ImageResultProps> = ({ images, onBack, onGenerateAga
           onClick={onGoHome}
           className="w-full sm:w-auto bg-gray-200 text-gray-700 font-semibold py-2 px-6 rounded-lg hover:bg-gray-300 transition"
         >
-          {t('button_back_to_home')}
+          {t('button_new_card')}
         </button>
         <button
           onClick={onBack}
           className="w-full sm:w-auto bg-white text-gray-800 font-semibold py-2 px-6 rounded-lg border border-gray-300 hover:bg-gray-100 transition"
         >
-          {t('button_edit_options')}
+          {t('button_edit_card')}
         </button>
         <button
           onClick={onGenerateAgain}
