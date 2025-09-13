@@ -32,13 +32,8 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const initializeLiff = async () => {
-      const liffId = process.env.LIFF_ID;
-
-      if (!liffId) {
-        setLiffError("LIFF ID is not configured. Please set the LIFF_ID environment variable.");
-        setIsLiffInitializing(false);
-        return;
-      }
+      // Hardcode the correct "Published" LIFF ID to match the Vercel deployment URL.
+      const liffId = '2008103176-8bkB21qA';
       
       try {
         await window.liff.init({ liffId });
